@@ -1,0 +1,14 @@
+@page
+@model QuizSystemFrontend.Pages.CreateQuizModel
+
+<form method="post">
+    <div>
+        <label asp-for="Quiz.Title"></label>
+        <input asp-for="Quiz.Title" class="form-control" />
+    </div>
+    <div>
+        <label asp-for="Quiz.Description"></label>
+        <textarea asp-for="Quiz.Description" class="form-control"></textarea>
+    </div>
+    <button type="submit">Create Quiz</button>
+</form>

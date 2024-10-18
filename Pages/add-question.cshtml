@@ -1,0 +1,115 @@
+@page
+@model AddQuestionModel
+
+@{
+    Layout = "_Layout"; // Use the created layout
+    ViewData["Title"] = "Add Question";
+}
+
+<h1>Add Question</h1>
+<button onclick="window.location.href='http://localhost:5292/questions';" class="btn btn-primary">ดู Questions ทั้งหมด</button>
+<form id="addQuestionForm">
+    <div class="form-group">
+        <input name="NewQuestion.Text" class="form-control" required />
+    </div>
+
+    <h3>Answers</h3>
+    <div id="answers">
+        @for (int i = 0; i < Model.NewQuestion.Answers.Count; i++)
+        {
+            <div class="form-group">
+                <label asp-for="NewQuestion.Answers[i].Text"></label>
+                <input asp-for="NewQuestion.Answers[i].Text" class="form-control" required />
+                <div class="form-check">
+                    <input asp-for="NewQuestion.Answers[i].IsCorrect" class="form-check-input" type="checkbox" />
+                    <label class="form-check-label">Correct Answer</label>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button type="button" class="btn btn-secondary" onclick="addAnswer()">Add Answer</button>
+    <br /><br />
+    <button type="submit" class="btn btn-primary">Save Question</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            window.addAnswer = function() {
+                var answersDiv = document.getElementById('answers');
+                var index = answersDiv.children.length;
+                
+                // Get the existing answer texts to avoid duplicates
+                const existingAnswers = Array.from(document.querySelectorAll('input[name^="NewQuestion.Answers"]'))
+                    .map(input => input.value.trim().toLowerCase()); // Normalize to lowercase for comparison
+
+                // Check if the input is empty
+                var answerTextInput = document.createElement('input');
+                answerTextInput.placeholder = 'Answer'; // Set a placeholder
+                answerTextInput.className = 'form-control';
+
+                // Validate for duplicates
+                if (existingAnswers.includes(answerTextInput.value.trim().toLowerCase())) {
+                    alert("This answer already exists!");
+                    return; // Prevent adding duplicate answers
+                }
+
+                var newAnswerDiv = `<div class="form-group">
+                    <label for="NewQuestion_Answers_${index}__Text">Answer</label>
+                    <input name="NewQuestion.Answers[${index}].Text" class="form-control" required />
+                    <div class="form-check">
+                        <input name="NewQuestion.Answers[${index}].IsCorrect" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Correct Answer</label>
+                    </div>
+                </div>`;
+                answersDiv.insertAdjacentHTML('beforeend', newAnswerDiv);
+            };
+
+            document.getElementById('addQuestionForm').addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                // Prepare the payload
+                const textInput = document.querySelector('input[name="NewQuestion.Text"]'); // Corrected selector
+                const text = textInput ? textInput.value : ""; // Check if the element exists
+                const answers = Array.from(document.querySelectorAll('[name^="NewQuestion.Answers"]')).reduce((acc, input) => {
+                    const indexMatch = input.name.match(/\d+/);
+                    if (indexMatch) {
+                        const index = indexMatch[0];
+                        const answerTextInput = document.querySelector(`input[name="NewQuestion.Answers[${index}].Text"]`);
+                        const isCorrectInput = document.querySelector(`input[name="NewQuestion.Answers[${index}].IsCorrect"]`);
+
+                        const answerText = answerTextInput ? answerTextInput.value : ""; // Check if the element exists
+                        const isCorrect = isCorrectInput ? isCorrectInput.checked : false; // Check if the element exists
+
+                        // Ensure no duplicate answers are included in the payload
+                        if (answerText && !acc.some(ans => ans.text.toLowerCase() === answerText.toLowerCase())) {
+                            acc.push({ text: answerText, isCorrect: isCorrect });
+                        }
+                    }
+                    return acc;
+                }, []);
+
+                const payload = { text: text, answers: answers };
+
+                // Send the payload to the API
+                fetch('https://localhost:5001/api/Question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Optionally, redirect or show a success message
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
+}
+

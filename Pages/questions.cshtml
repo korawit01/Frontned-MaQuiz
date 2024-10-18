@@ -1,0 +1,50 @@
+@page
+@model QuestionsModel
+@{
+    Layout = "_Layout"; // Use the created layout
+    ViewData["Title"] = "Questions";
+}
+
+<h1>Questions</h1>
+<button onclick="window.location.href='http://localhost:5292/add-question';" class="btn btn-primary">เพื่ม Questions</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Text</th>
+            <th>Answers</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var question in Model.Questions)
+        {
+            <tr>
+                <td>@question.Id</td>
+                <td>@question.Text</td>
+                <td>
+                    <ul>
+                         @for (int i = 0; i < question.Answers.Count; i++)
+                        {
+                            <li>@(i + 1)). @question.Answers[i].Text - 
+                            <span>
+                                @if (question.Answers[i].IsCorrect) 
+                                {
+                                    <i style="color: green" class="fa fa-check"></i>
+                                }
+                                else 
+                                {
+                                    <i style="color: red" class="fa fa-times"></i>
+                                }
+                            </span>
+                            </li>
+                        }
+                    </ul>
+                </td>
+                <td><button  class="btn btn-primary">ลบ</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
